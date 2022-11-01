@@ -1,55 +1,57 @@
-﻿namespace CL.Data.Repository;
-
-public class UsuarioRepository : IUsuarioRepository
+﻿namespace CL.Data.Repository
 {
-    private readonly ClContext context;
 
-    public UsuarioRepository(ClContext context)
+    public class UsuarioRepository : IUsuarioRepository
     {
-        this.context = context;
-    }
+        private readonly ClContext context;
 
-    public async Task<IEnumerable<Usuario>> GetAsync()
-    {
-        return await context.Usuarios.AsNoTracking().ToListAsync();
-    }
-
-    public async Task<Usuario> GetAsync(string login)
-    {
-        return await context.Usuarios
-            .Include(p => p.Funcoes)
-            .AsNoTracking()
-            .SingleOrDefaultAsync(p => p.Login == login);
-    }
-
-    public async Task<Usuario> InsertAsync(Usuario usuario)
-    {
-        await InsertUsuarioFuncaoAsync(usuario);
-        await context.Usuarios.AddAsync(usuario);
-        await context.SaveChangesAsync();
-        return usuario;
-    }
-
-    private async Task InsertUsuarioFuncaoAsync(Usuario usuario)
-    {
-        var funcoesConsultas = new List<Funcao>();
-        foreach (var funcao in usuario.Funcoes)
+        public UsuarioRepository(ClContext context)
         {
-            var funcaoConsultada = await context.Funcoes.FindAsync(funcao.Id);
-            funcoesConsultas.Add(funcaoConsultada);
+            this.context = context;
         }
-        usuario.Funcoes = funcoesConsultas;
-    }
 
-    public async Task<Usuario> UpdateAsync(Usuario usuario)
-    {
-        var usuarioConsultado = await context.Usuarios.FindAsync(usuario.Login);
-        if (usuarioConsultado == null)
+        public async Task<IEnumerable<Usuario>> GetAsync()
         {
-            return null;
+            return await context.Usuarios.AsNoTracking().ToListAsync();
         }
-        context.Entry(usuarioConsultado).CurrentValues.SetValues(usuario);
-        await context.SaveChangesAsync();
-        return usuarioConsultado;
+
+        public async Task<Usuario> GetAsync(string login)
+        {
+            return await context.Usuarios
+                .Include(p => p.Funcoes)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(p => p.Login == login);
+        }
+
+        public async Task<Usuario> InsertAsync(Usuario usuario)
+        {
+            await InsertUsuarioFuncaoAsync(usuario);
+            await context.Usuarios.AddAsync(usuario);
+            await context.SaveChangesAsync();
+            return usuario;
+        }
+
+        private async Task InsertUsuarioFuncaoAsync(Usuario usuario)
+        {
+            var funcoesConsultas = new List<Funcao>();
+            foreach (var funcao in usuario.Funcoes)
+            {
+                var funcaoConsultada = await context.Funcoes.FindAsync(funcao.Id);
+                funcoesConsultas.Add(funcaoConsultada);
+            }
+            usuario.Funcoes = funcoesConsultas;
+        }
+
+        public async Task<Usuario> UpdateAsync(Usuario usuario)
+        {
+            var usuarioConsultado = await context.Usuarios.FindAsync(usuario.Login);
+            if (usuarioConsultado == null)
+            {
+                return null;
+            }
+            context.Entry(usuarioConsultado).CurrentValues.SetValues(usuario);
+            await context.SaveChangesAsync();
+            return usuarioConsultado;
+        }
     }
 }
